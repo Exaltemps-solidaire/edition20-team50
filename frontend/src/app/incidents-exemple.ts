@@ -86,3 +86,38 @@ export function libelleStatut(statut: StatutIncident): string {
       return "Clôturé";
   }
 }
+
+export type ChampsDeclaration = {
+  terrain: string;
+  equipement: string;
+  description: string;
+  gravite: Gravite;
+};
+
+export type ErreursDeclaration = {
+  terrain?: string;
+  equipement?: string;
+};
+
+export function validerDeclaration(champs: Pick<ChampsDeclaration, "terrain" | "equipement">): ErreursDeclaration {
+  const erreurs: ErreursDeclaration = {};
+  if (!champs.terrain.trim()) {
+    erreurs.terrain = "Le terrain est obligatoire.";
+  }
+  if (!champs.equipement.trim()) {
+    erreurs.equipement = "L'équipement est obligatoire.";
+  }
+  return erreurs;
+}
+
+export function declarerIncident(incidents: Incident[], champs: ChampsDeclaration): Incident[] {
+  const nouvelIncident: Incident = {
+    id: `i-${Date.now()}`,
+    terrain: champs.terrain.trim(),
+    equipement: champs.equipement.trim(),
+    description: champs.description.trim(),
+    gravite: champs.gravite,
+    statut: "declare",
+  };
+  return [nouvelIncident, ...incidents];
+}

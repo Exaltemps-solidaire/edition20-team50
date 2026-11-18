@@ -3,16 +3,43 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 import {
+  declarerIncident,
   incidentsExemple,
   incidentsOuverts,
   libelleGravite,
   libelleStatut,
   personas,
+  validerDeclaration,
+  type ErreursDeclaration,
+  type Gravite,
+  type Incident,
   type Persona,
 } from "./incidents-exemple";
 
+const graviteParDefaut: Gravite = "intervention_rapide";
+
 export default function Home() {
   const [persona, setPersona] = useState<Persona | null>(null);
+  const [incidents, setIncidents] = useState<Incident[]>(incidentsExemple);
+  const [terrain, setTerrain] = useState("");
+  const [equipement, setEquipement] = useState("");
+  const [description, setDescription] = useState("");
+  const [gravite, setGravite] = useState<Gravite>(graviteParDefaut);
+  const [erreurs, setErreurs] = useState<ErreursDeclaration>({});
+
+  function declarer(event: React.FormEvent) {
+    event.preventDefault();
+    const erreursTrouvees = validerDeclaration({ terrain, equipement });
+    setErreurs(erreursTrouvees);
+    if (Object.keys(erreursTrouvees).length > 0) {
+      return;
+    }
+    setIncidents((courants) => declarerIncident(courants, { terrain, equipement, description, gravite }));
+    setTerrain("");
+    setEquipement("");
+    setDescription("");
+    setGravite(graviteParDefaut);
+  }
 
   if (!persona) {
     return (
@@ -46,9 +73,37 @@ export default function Home() {
             Changer de rôle
           </button>
         </header>
+        {(persona.role === "rst" || persona.role === "educateur") && (
+          <form className={styles.formulaire} onSubmit={declarer} noValidate>
+            <h2>Déclarer un incident</h2>
+            <label>
+              Terrain
+              <input value={terrain} onChange={(e) => setTerrain(e.target.value)} />
+              {erreurs.terrain && <span className={styles.erreur}>{erreurs.terrain}</span>}
+            </label>
+            <label>
+              Équipement
+              <input value={equipement} onChange={(e) => setEquipement(e.target.value)} />
+              {erreurs.equipement && <span className={styles.erreur}>{erreurs.equipement}</span>}
+            </label>
+            <label>
+              Description
+              <input value={description} onChange={(e) => setDescription(e.target.value)} />
+            </label>
+            <label>
+              Gravité
+              <select value={gravite} onChange={(e) => setGravite(e.target.value as Gravite)}>
+                <option value="urgence_securite">{libelleGravite("urgence_securite")}</option>
+                <option value="intervention_rapide">{libelleGravite("intervention_rapide")}</option>
+                <option value="intervention_programmee">{libelleGravite("intervention_programmee")}</option>
+              </select>
+            </label>
+            <button type="submit">Déclarer</button>
+          </form>
+        )}
         <h1>Incidents ouverts</h1>
         <ul className={styles.listeIncidents}>
-          {incidentsOuverts(incidentsExemple).map((incident) => (
+          {incidentsOuverts(incidents).map((incident) => (
             <li key={incident.id}>
               <div className={styles.incidentEntete}>
                 <strong>{incident.terrain}</strong>

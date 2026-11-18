@@ -68,7 +68,21 @@
 - **Fichiers prévus** : `frontend/src/app/page.tsx` (ou nouveau composant de formulaire), un module de logique métier (validation + ajout d'un incident) et son test.
 - **Tests unitaires prévus** : 1 à 3, sur la validation du formulaire (champs obligatoires) et sur la fonction d'ajout (statut initial « déclaré »).
 - **Étapes ajoutées à la démo** : remplir le formulaire de déclaration, vérifier que l'incident apparaît dans la liste.
-- **Bilan** : _à remplir en fin d'itération._
+- **Bilan** :
+  - **Temps restant annoncé** : 30 minutes, à 2026-11-18 17:37.
+  - Codage réalisé en 1 minute (budget 10 min), sans dépassement.
+  - Les 3 critères d'acceptation sont satisfaits : formulaire visible pour les rôles RST et éducateur sportif uniquement, erreurs affichées et aucun incident créé si terrain/équipement vides (testé unitairement), incident conservé en changeant de rôle (état porté par le composant `Home`, pas remis à zéro par le changement de persona).
+  - `npm test` : 2 (api) + 5 (frontend, 3 nouveaux) tests, tous verts. `./scripts/verifier-deployabilite.sh` : aucune borne.
+  - Déployé : rebuild + push de l'image `frontend` uniquement (l'API n'a pas changé), recréation du service via `podman compose`. Vérifié depuis la machine : `localhost:8080/`, `/health`, `/sante` → 200.
+  - **Version 2 signalée à PM Lab** à 17:39 (`./scripts/signaler-version.sh 2`).
+  - Démo `e2e/demo.spec.ts` complétée (choix du rôle RST, déclaration d'un incident, vérification dans la liste) et rejouée avec succès en local (`BASE_URL=http://localhost:8080`).
+  - Rien de reporté dans cette itération.
+  - **Modifications** :
+    - `frontend/src/app/incidents-exemple.ts` : ajoute `validerDeclaration` (champs obligatoires terrain/équipement) et `declarerIncident` (ajoute en tête, statut `declare`) — sert les critères 1 et 2.
+    - `frontend/src/app/incidents-exemple.test.ts` : 3 tests nouveaux sur ces deux fonctions.
+    - `frontend/src/app/page.tsx` : formulaire de déclaration affiché pour les rôles `rst`/`educateur`, état des incidents levé dans `Home` (persiste au changement de rôle) — sert les critères 1, 2 et 3.
+    - `frontend/src/app/page.module.css` : styles du formulaire et des messages d'erreur.
+    - `e2e/demo.spec.ts` : étapes de déclaration ajoutées à la démo (hors DoD).
 
 ## Itération 3 : Qualifier la priorité et affecter un prestataire
 
