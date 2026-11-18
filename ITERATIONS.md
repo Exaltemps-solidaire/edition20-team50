@@ -118,13 +118,23 @@
 - **Critères d'acceptation** :
   - Étant donné un incident « déclaré » et le rôle référente, quand elle choisit une priorité et un prestataire avec un délai et valide, alors l'incident passe au statut « affecté » et affiche ces informations dans la liste.
   - Étant donné un incident déjà affecté, quand on le consulte à nouveau, alors la priorité et le prestataire restent visibles.
+  - Etant donné que le prestataire ayant reglé l'incident, l'incident est marqué comme resolu
   - Étant donné un rôle autre que référente (RST, éducateur sportif), quand il consulte la liste, alors l'action de qualification/affectation ne lui est pas proposée.
 - **Hypothèse de l'équipe couverte** : « chaque dossier ouvert porte une priorité et un prestataire affecté avant clôture ».
 - **Codage estimé** : 10 minutes.
 - **Fichiers prévus** : module de logique métier (transition de statut, contrôle par rôle) et son test, composant/écran de qualification, mise à jour de la liste des incidents.
 - **Tests unitaires prévus** : 1 à 3, sur la transition de statut « déclaré » → « affecté » et sur le contrôle d'accès par rôle.
 - **Étapes ajoutées à la démo** : qualifier et affecter un prestataire à l'incident déclaré pendant la démo.
-- **Bilan** : _à remplir en fin d'itération._
+- **Bilan** :
+  - Durée de codage réelle : moins de 2 minutes (le gros du travail métier avait déjà été fait avant la reprise de session), pas de dépassement.
+  - Critères satisfaits : les 1er, 2e et 4e (transition « déclaré » → « affecté » avec priorité/prestataire/délai, affichage persistant, action masquée hors rôle référente).
+  - Critère reporté : le 3e (« le prestataire marque l'incident comme résolu ») est hors périmètre de cette itération — c'est un flux de résolution distinct, pas encore codé ; reporté à une itération suivante dédiée au rôle prestataire.
+  - Rien bloqué ou refusé par le harnais ; contrat de déployabilité : aucune borne.
+  - **Modifications** :
+    - `frontend/src/app/incidents-exemple.ts` : ajout du type `Prestataire`, de `prestatairesExemple`, du type `Affectation`, de `peutQualifier(role)` et de `affecterIncident(incidents, id, affectation)` qui fait passer un incident au statut « affecté » en posant `priorite`, `prestataireAffecte`, `delai`, sans toucher aux autres incidents — sert les critères 1, 2 et 4.
+    - `frontend/src/app/incidents-exemple.test.ts` : tests sur `affecterIncident` (transition de statut + non-effet sur les autres incidents) et sur `peutQualifier` (accès réservé au rôle référente) — couvre les critères 1, 2 et 4.
+    - `frontend/src/app/page.tsx` : fonction `qualifier` qui lit le formulaire et appelle `affecterIncident` ; affichage de la priorité/prestataire/délai sur un incident affecté ; formulaire de qualification affiché uniquement pour `peutQualifier(persona.role)` et un incident encore « déclaré » — sert les critères 1, 2 et 4.
+    - `frontend/src/app/page.module.css` : classe `.formulaireQualification` pour la mise en forme du petit formulaire inline.
 
 ---
 

@@ -3,12 +3,15 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 import {
+  affecterIncident,
   declarerIncident,
   incidentsExemple,
   incidentsOuverts,
   libelleGravite,
   libelleStatut,
   personas,
+  peutQualifier,
+  prestatairesExemple,
   validerDeclaration,
   type ErreursDeclaration,
   type Gravite,
@@ -52,6 +55,18 @@ export default function Home() {
     setDescription("");
     setGravite(graviteParDefaut);
     setPhotoDataUrl(undefined);
+  }
+
+  function qualifier(incidentId: string, event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const donnees = new FormData(event.currentTarget);
+    setIncidents((courants) =>
+      affecterIncident(courants, incidentId, {
+        priorite: donnees.get("priorite") as Gravite,
+        prestataire: donnees.get("prestataire") as string,
+        delai: donnees.get("delai") as string,
+      }),
+    );
   }
 
   if (!persona) {
@@ -131,6 +146,29 @@ export default function Home() {
               <div>{libelleGravite(incident.gravite)}</div>
               {incident.photoDataUrl && (
                 <img src={incident.photoDataUrl} alt="Photo du signalement" className={styles.miniaturePhoto} />
+              )}
+              {incident.statut === "affecte" && incident.priorite && (
+                <div>
+                  Priorité : {libelleGravite(incident.priorite)} — Prestataire : {incident.prestataireAffecte} (délai : {incident.delai})
+                </div>
+              )}
+              {persona.role && peutQualifier(persona.role) && incident.statut === "declare" && (
+                <form className={styles.formulaireQualification} onSubmit={(e) => qualifier(incident.id, e)}>
+                  <select name="priorite" defaultValue="intervention_rapide">
+                    <option value="urgence_securite">{libelleGravite("urgence_securite")}</option>
+                    <option value="intervention_rapide">{libelleGravite("intervention_rapide")}</option>
+                    <option value="intervention_programmee">{libelleGravite("intervention_programmee")}</option>
+                  </select>
+                  <select name="prestataire" defaultValue={prestatairesExemple[0].nom}>
+                    {prestatairesExemple.map((p) => (
+                      <option key={p.id} value={p.nom}>
+                        {p.nom}
+                      </option>
+                    ))}
+                  </select>
+                  <input name="delai" placeholder="Délai (ex. 3 jours)" defaultValue="3 jours" />
+                  <button type="submit">Affecter</button>
+                </form>
               )}
             </li>
           ))}

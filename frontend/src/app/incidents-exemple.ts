@@ -29,7 +29,37 @@ export type Incident = {
   gravite: Gravite;
   statut: StatutIncident;
   photoDataUrl?: string;
+  priorite?: Gravite;
+  prestataireAffecte?: string;
+  delai?: string;
 };
+
+export type Prestataire = { id: string; nom: string };
+
+export const prestatairesExemple: Prestataire[] = [
+  { id: "pr1", nom: "Les Ateliers du Rhône" },
+  { id: "pr2", nom: "SportRénov" },
+];
+
+export type Affectation = { priorite: Gravite; prestataire: string; delai: string };
+
+export function peutQualifier(role: Role): boolean {
+  return role === "referente";
+}
+
+export function affecterIncident(incidents: Incident[], incidentId: string, affectation: Affectation): Incident[] {
+  return incidents.map((incident) =>
+    incident.id === incidentId
+      ? {
+          ...incident,
+          statut: "affecte" as StatutIncident,
+          priorite: affectation.priorite,
+          prestataireAffecte: affectation.prestataire,
+          delai: affectation.delai,
+        }
+      : incident,
+  );
+}
 
 export const incidentsExemple: Incident[] = [
   {

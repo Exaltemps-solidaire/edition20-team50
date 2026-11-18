@@ -92,3 +92,13 @@
   border-radius: 6px;
   object-fit: cover;
 }
+
+.formulaireQualification {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+}
