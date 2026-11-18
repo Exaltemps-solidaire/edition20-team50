@@ -1,0 +1,98 @@
+# Plan d'itérations
+
+**Plan validé le 2026-11-18.**
+
+- **Source du plan** : proposé par l'agent (aucun plan d'itérations trouvé dans la passation PM Lab — seulement un plan de livraison en 4 objectifs, repris ci-dessous comme ordre de priorité).
+- **Temps restant annoncé** : 60 minutes, à 2026-11-18 16:51.
+- **Durée du tour de test de l'équipe** : 5 minutes.
+- **Capacité estimée** : chaque itération coûte au plus 10 min de codage + ~5 min de publication + 5 min de tour de test = ~20 min. Avec 60 minutes, **3 itérations tiennent, sans marge** si chacune prend ses 10 minutes pleines. ⚠️ Budget tendu : à la moindre dérive, préférer finaliser moins que prévu plutôt que dépasser.
+- **Hors périmètre de cette fenêtre de build** (✂️, à reporter après le hackathon ou si du temps se libère) :
+  - Vérification de la réparation et clôture du dossier par la référente (objectif 3 du plan de l'équipe).
+  - Planning des contrôles (objectif 4 du plan de l'équipe).
+  - Tableau de bord général agrégé (terrains, contrôles en retard, réparations en cours).
+  - Photo jointe au signalement et au compte-rendu d'intervention.
+  - Notifications (référente/RST/prestataire).
+  - Persistance réelle (base de données + API) : les incidents restent en mémoire côté front pour cette fenêtre ; limitation à documenter dans `DEPLOIEMENT.md`.
+  - Tout ce que la passation écarte déjà : suivi des jeunes, relances automatiques, intégration des rapports des bureaux de contrôle, gestion des droits d'accès, cas juridique "terrain sans convention", statistiques avancées.
+
+---
+
+## Itération 1 : Le squelette est en ligne et montre l'écran « Qui êtes-vous ? » puis la liste des incidents (données en dur)
+
+- **Dans le périmètre** :
+  - `.env.example` à la racine et `DEPLOIEMENT.md` (gabarit déjà posé pour `api/` et `frontend/`, routes `/health` et `/sante` déjà présentes).
+  - Écran « Qui êtes-vous ? » : liste de personas d'exemple (RST, référente, éducateur sportif, prestataire, directeur), sans connexion ni mot de passe.
+  - Une fois un rôle choisi : liste des incidents ouverts, données d'exemple en dur (terrain, équipement, gravité, statut), bouton pour changer de rôle.
+- **Hors périmètre** : déclaration d'incident fonctionnelle, qualification, API réelle pour les incidents (ils restent en dur dans le front à ce stade).
+- **Critères d'acceptation** :
+  - Étant donné l'application déployée, quand on ouvre `/`, alors l'écran « Qui êtes-vous ? » liste au moins RST, référente, éducateur sportif, prestataire.
+  - Étant donné un rôle choisi, quand on valide, alors la liste des incidents ouverts (données d'exemple, aucune donnée personnelle réelle) s'affiche avec un bouton pour changer de rôle.
+  - Étant donné `$URL_PUBLIQUE/health` et `$URL_PUBLIQUE/sante`, quand le développeur les ouvre dans son navigateur, alors ils répondent 200 avec un corps qui n'est pas la page de réveil.
+- **Hypothèse de l'équipe couverte** : aucune directement — cette itération pose le socle sur lequel les hypothèses suivantes se mesureront.
+- **Codage estimé** : 10 minutes.
+- **Fichiers prévus** : `frontend/src/app/page.tsx`, `frontend/src/app/incidents-exemple.ts` (ou équivalent, données + logique de filtrage), `.env.example`, `DEPLOIEMENT.md`.
+- **Tests unitaires prévus** : 1 à 3, sur la fonction qui filtre/étiquette les incidents « ouverts » à partir du jeu de données d'exemple (pas de test sur le balisage pur).
+- **Étapes ajoutées à la démo** : ouvrir l'app, choisir le rôle RST, voir la liste des incidents.
+- **Bilan** :
+  - Codage réalisé en 3 minutes (budget 10 min), sans dépassement.
+  - Critère 1 et 2 satisfaits en local : build Next.js (`next build`) réussi, export statique généré avec l'écran « Qui êtes-vous ? » puis la liste des incidents.
+  - `npm test` passe (2 tests api existants + 2 tests nouveaux sur `incidents-exemple.ts`).
+  - `./scripts/verifier-deployabilite.sh` : aucune borne, aucune alarme.
+  - **Déblocage** : l'infra a posé un miroir `mirror.gcr.io` dans `/etc/containers/registries.conf.d/` (17:28) devant `docker.io`, hors du quota anonyme partagé par les VM de l'événement. Rebuild de `api` et `frontend` réussi dès la première tentative après ce changement.
+  - Images poussées sur `localhost:5000/team50/{api,frontend}:dev`, déploiement via `podman compose` (services `frontend` 8080, `api` 8081 sur `core-network`).
+  - Vérifié depuis la machine : `localhost:8080/` → 200 avec l'écran « Qui êtes-vous ? » et les 5 personas ; `localhost:8080/health`, `localhost:8080/sante`, `localhost:8081/health`, `localhost:8081/sante` → tous 200, corps non-vide (pas la page de réveil).
+  - Critère 3 satisfait depuis la machine ; **vérification `$URL_PUBLIQUE/health` et `/sante` dans le navigateur du développeur en attente** (point 5 de la DoD, non bloquant pour le signal).
+  - `npm test` repassé (2+2 tests, tous verts) et `./scripts/verifier-deployabilite.sh` : aucune borne, juste avant le signal.
+  - **Version 1 signalée à PM Lab** à 17:32 (`./scripts/signaler-version.sh 1`) : `{"numero":1,"url":"https://edition20-team50.exaltemps-space.com", ...}`.
+  - Itération close.
+  - **Modifications** :
+    - `frontend/src/app/incidents-exemple.ts` (nouveau) : données d'exemple (personas, incidents) et logique métier (`incidentsOuverts`, `libelleGravite`, `libelleStatut`) — sert les critères 1 et 2.
+    - `frontend/src/app/incidents-exemple.test.ts` (nouveau) : 2 tests sur `incidentsOuverts` et `libelleGravite`.
+    - `frontend/src/app/page.tsx` : écran « Qui êtes-vous ? » puis liste des incidents ouverts, remplace le gabarit `create-next-app` — sert les critères 1 et 2.
+    - `frontend/src/app/page.module.css` : styles de ces deux écrans.
+    - `.env.example` (nouveau) : documente `PORT` (api).
+    - `DEPLOIEMENT.md` (nouveau) : sert le point 8 du contrat de déployabilité, note la limitation (incidents en dur, pas de persistance).
+    - `frontend/Dockerfile`, `api/Dockerfile` : images de base qualifiées en `docker.io/library/…` (exigé par le `/CLAUDE.md` du serveur, sinon la résolution de nom court échoue).
+    - `podman-compose.yml` (nouveau, racine) : services `frontend` (8080) et `api` (8081) sur `core-network`, suivant la recette du serveur.
+
+## Itération 2 : Déclarer un incident depuis le formulaire mobile
+
+- **Dans le périmètre** : formulaire de déclaration (terrain, équipement, description courte, niveau de gravité), bouton valider, le nouvel incident apparaît en tête de la liste avec le statut « déclaré ». Pas de persistance serveur : état gardé en mémoire côté app pour cette itération (limitation à noter).
+- **Hors périmètre** : photo jointe, notification à la référente/au RST, qualification de la priorité, persistance base de données.
+- **Critères d'acceptation** :
+  - Étant donné le rôle RST ou éducateur sportif, quand il remplit terrain + équipement + description + gravité et valide, alors l'incident apparaît en tête de la liste des incidents ouverts avec le statut « déclaré ».
+  - Étant donné un champ obligatoire vide (terrain ou équipement), quand on valide, alors le formulaire affiche une erreur et ne crée aucun incident.
+  - Étant donné qu'on change de rôle puis qu'on revient à la liste (sans recharger la page), quand on consulte les incidents, alors l'incident déclaré précédemment est toujours visible.
+- **Hypothèse de l'équipe couverte** : « un formulaire mobile unique permettrait à l'éducateur sportif de déclarer un incident en quelques gestes » (mesure : part des signalements via le canal unique, cible 100 %).
+- **Codage estimé** : 10 minutes.
+- **Fichiers prévus** : `frontend/src/app/page.tsx` (ou nouveau composant de formulaire), un module de logique métier (validation + ajout d'un incident) et son test.
+- **Tests unitaires prévus** : 1 à 3, sur la validation du formulaire (champs obligatoires) et sur la fonction d'ajout (statut initial « déclaré »).
+- **Étapes ajoutées à la démo** : remplir le formulaire de déclaration, vérifier que l'incident apparaît dans la liste.
+- **Bilan** : _à remplir en fin d'itération._
+
+## Itération 3 : Qualifier la priorité et affecter un prestataire
+
+- **Dans le périmètre** : depuis le rôle référente, ouvrir un incident « déclaré », choisir une priorité (urgence sécurité / intervention rapide / intervention programmée) et un prestataire d'exemple avec un délai ; l'incident passe au statut « affecté » et affiche priorité + prestataire dans la liste.
+- **Hors périmètre** : avancement du prestataire, vérification RST, clôture, planning des contrôles, notification réelle.
+- **Critères d'acceptation** :
+  - Étant donné un incident « déclaré » et le rôle référente, quand elle choisit une priorité et un prestataire avec un délai et valide, alors l'incident passe au statut « affecté » et affiche ces informations dans la liste.
+  - Étant donné un incident déjà affecté, quand on le consulte à nouveau, alors la priorité et le prestataire restent visibles.
+  - Étant donné un rôle autre que référente (RST, éducateur sportif), quand il consulte la liste, alors l'action de qualification/affectation ne lui est pas proposée.
+- **Hypothèse de l'équipe couverte** : « chaque dossier ouvert porte une priorité et un prestataire affecté avant clôture ».
+- **Codage estimé** : 10 minutes.
+- **Fichiers prévus** : module de logique métier (transition de statut, contrôle par rôle) et son test, composant/écran de qualification, mise à jour de la liste des incidents.
+- **Tests unitaires prévus** : 1 à 3, sur la transition de statut « déclaré » → « affecté » et sur le contrôle d'accès par rôle.
+- **Étapes ajoutées à la démo** : qualifier et affecter un prestataire à l'incident déclaré pendant la démo.
+- **Bilan** : _à remplir en fin d'itération._
+
+---
+
+## À venir (non détaillé, ordre de priorité de l'équipe)
+
+4. Avancement du prestataire (travaux réalisés, statut « en cours »).
+5. Vérification RST et confirmation de remise en service.
+6. Clôture du dossier par la référente, historique dans la fiche équipement.
+7. Planning des contrôles (équipements à contrôler, enregistrement date/résultat).
+8. Tableau de bord général (terrains, incidents ouverts, contrôles en retard, réparations en cours).
+9. Persistance réelle (base de données + API) à la place de l'état en mémoire.
+10. Photo jointe au signalement et au compte-rendu d'intervention.
