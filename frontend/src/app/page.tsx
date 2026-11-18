@@ -26,6 +26,18 @@ export default function Home() {
   const [description, setDescription] = useState("");
   const [gravite, setGravite] = useState<Gravite>(graviteParDefaut);
   const [erreurs, setErreurs] = useState<ErreursDeclaration>({});
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | undefined>(undefined);
+
+  function choisirPhoto(event: React.ChangeEvent<HTMLInputElement>) {
+    const fichier = event.target.files?.[0];
+    if (!fichier) {
+      setPhotoDataUrl(undefined);
+      return;
+    }
+    const lecteur = new FileReader();
+    lecteur.onload = () => setPhotoDataUrl(lecteur.result as string);
+    lecteur.readAsDataURL(fichier);
+  }
 
   function declarer(event: React.FormEvent) {
     event.preventDefault();
@@ -34,11 +46,12 @@ export default function Home() {
     if (Object.keys(erreursTrouvees).length > 0) {
       return;
     }
-    setIncidents((courants) => declarerIncident(courants, { terrain, equipement, description, gravite }));
+    setIncidents((courants) => declarerIncident(courants, { terrain, equipement, description, gravite, photoDataUrl }));
     setTerrain("");
     setEquipement("");
     setDescription("");
     setGravite(graviteParDefaut);
+    setPhotoDataUrl(undefined);
   }
 
   if (!persona) {
@@ -98,6 +111,11 @@ export default function Home() {
                 <option value="intervention_programmee">{libelleGravite("intervention_programmee")}</option>
               </select>
             </label>
+            <label>
+              Photo (optionnelle)
+              <input type="file" accept="image/*" onChange={choisirPhoto} />
+            </label>
+            {photoDataUrl && <img src={photoDataUrl} alt="Aperçu" className={styles.apercuPhoto} />}
             <button type="submit">Déclarer</button>
           </form>
         )}
@@ -111,6 +129,9 @@ export default function Home() {
               </div>
               <div>{incident.equipement} — {incident.description}</div>
               <div>{libelleGravite(incident.gravite)}</div>
+              {incident.photoDataUrl && (
+                <img src={incident.photoDataUrl} alt="Photo du signalement" className={styles.miniaturePhoto} />
+              )}
             </li>
           ))}
         </ul>

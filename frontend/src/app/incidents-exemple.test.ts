@@ -59,5 +59,18 @@ describe("declarerIncident", () => {
       equipement: "Filet",
       statut: "declare",
     });
+    expect(resultat[0].photoDataUrl).toBeUndefined();
+  });
+
+  it("conserve la photo jointe quand elle est fournie", () => {
+    const resultat = declarerIncident([], {
+      terrain: "Terrain Z",
+      equipement: "Poteau",
+      description: "",
+      gravite: "intervention_programmee",
+      photoDataUrl: "data:image/png;base64,abc123",
+    });
+
+    expect(resultat[0].photoDataUrl).toBe("data:image/png;base64,abc123");
   });
 });

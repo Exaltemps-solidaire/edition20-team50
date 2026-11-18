@@ -10,7 +10,6 @@
   - Vérification de la réparation et clôture du dossier par la référente (objectif 3 du plan de l'équipe).
   - Planning des contrôles (objectif 4 du plan de l'équipe).
   - Tableau de bord général agrégé (terrains, contrôles en retard, réparations en cours).
-  - Photo jointe au signalement et au compte-rendu d'intervention.
   - Notifications (référente/RST/prestataire).
   - Persistance réelle (base de données + API) : les incidents restent en mémoire côté front pour cette fenêtre ; limitation à documenter dans `DEPLOIEMENT.md`.
   - Tout ce que la passation écarte déjà : suivi des jeunes, relances automatiques, intégration des rapports des bureaux de contrôle, gestion des droits d'accès, cas juridique "terrain sans convention", statistiques avancées.
@@ -84,7 +83,35 @@
     - `frontend/src/app/page.module.css` : styles du formulaire et des messages d'erreur.
     - `e2e/demo.spec.ts` : étapes de déclaration ajoutées à la démo (hors DoD).
 
-## Itération 3 : Qualifier la priorité et affecter un prestataire
+## Itération 3 : Joindre une photo au signalement
+
+⚠️ **Changement de priorité** : insérée avant l'itération « qualifier/affecter » (qui devient l'itération 4) sur retour des cadreurs pendant le tour de test de la version 2. À valider formellement par l'équipe lors du prochain tour de test.
+
+- **Dans le périmètre** : champ photo optionnel dans le formulaire de déclaration ; la photo choisie est prévisualisée et conservée avec l'incident, affichée (miniature) dans la liste. Version réduite, cohérente avec l'absence de persistance serveur de cette fenêtre de build : la photo est gardée en mémoire côté app (data URL), pas de bucket S3 ni de route API dédiée à ce stade — ce sera repris avec l'itération « persistance réelle ».
+- **Hors périmètre** : stockage objet (S3), route API de service d'image, compression/redimensionnement, photo sur le compte-rendu d'intervention (prestataire).
+- **Critères d'acceptation** :
+  - Étant donné le rôle RST ou éducateur sportif, quand il joint une photo et valide le formulaire, alors l'incident déclaré affiche cette photo dans la liste.
+  - Étant donné aucun fichier choisi, quand on valide le formulaire (terrain et équipement remplis), alors l'incident est créé sans photo, sans erreur.
+- **Hypothèse de l'équipe couverte** : retour direct des cadreurs (pas dans les hypothèses initiales de la passation) — à documenter si confirmé par l'équipe.
+- **Codage estimé** : 5 minutes (budget réduit, 15 minutes restantes au total).
+- **Fichiers prévus** : `frontend/src/app/incidents-exemple.ts` (type + fonction), son test, `frontend/src/app/page.tsx`.
+- **Tests unitaires prévus** : 1, sur `declarerIncident` avec et sans photo.
+- **Étapes ajoutées à la démo** : reporté si le temps manque.
+- **Bilan** :
+  - **Temps restant annoncé** : 15 minutes, à 2026-11-18 17:53 (annonce initiale de 10 min révisée à 15 min par le développeur).
+  - Codage réalisé en 1 minute (budget réduit à 5 min), sans dépassement.
+  - Les 2 critères d'acceptation sont satisfaits : photo prévisualisée et affichée en miniature dans la liste quand elle est fournie (testé unitairement sur `declarerIncident`) ; incident créé sans erreur ni photo quand aucun fichier n'est choisi.
+  - `npm test` : 2 (api) + 6 (frontend, 1 nouveau) tests, tous verts. `./scripts/verifier-deployabilite.sh` : aucune borne.
+  - Déployé : rebuild + push de l'image `frontend` uniquement, recréation du service. Vérifié depuis la machine : `localhost:8080/`, `/health`, `/sante`, `localhost:8081/health` → 200.
+  - **Version 3 signalée à PM Lab** à 17:55 (`./scripts/signaler-version.sh 3`).
+  - Reporté faute de temps : mise à jour de `e2e/demo.spec.ts` (pas d'étape photo ajoutée à la démo).
+  - **Modifications** :
+    - `frontend/src/app/incidents-exemple.ts` : `Incident` et `ChampsDeclaration` gagnent `photoDataUrl?: string`, propagé par `declarerIncident` — sert les 2 critères.
+    - `frontend/src/app/incidents-exemple.test.ts` : 1 test nouveau (photo conservée quand fournie, absente sinon).
+    - `frontend/src/app/page.tsx` : champ `<input type="file">` optionnel, lu en data URL via `FileReader`, aperçu dans le formulaire et miniature dans la liste des incidents — sert les 2 critères.
+    - `frontend/src/app/page.module.css` : styles de l'aperçu et de la miniature.
+
+## Itération 4 : Qualifier la priorité et affecter un prestataire
 
 - **Dans le périmètre** : depuis le rôle référente, ouvrir un incident « déclaré », choisir une priorité (urgence sécurité / intervention rapide / intervention programmée) et un prestataire d'exemple avec un délai ; l'incident passe au statut « affecté » et affiche priorité + prestataire dans la liste.
 - **Hors périmètre** : avancement du prestataire, vérification RST, clôture, planning des contrôles, notification réelle.
@@ -103,10 +130,9 @@
 
 ## À venir (non détaillé, ordre de priorité de l'équipe)
 
-4. Avancement du prestataire (travaux réalisés, statut « en cours »).
-5. Vérification RST et confirmation de remise en service.
-6. Clôture du dossier par la référente, historique dans la fiche équipement.
-7. Planning des contrôles (équipements à contrôler, enregistrement date/résultat).
-8. Tableau de bord général (terrains, incidents ouverts, contrôles en retard, réparations en cours).
-9. Persistance réelle (base de données + API) à la place de l'état en mémoire.
-10. Photo jointe au signalement et au compte-rendu d'intervention.
+5. Avancement du prestataire (travaux réalisés, statut « en cours »).
+6. Vérification RST et confirmation de remise en service.
+7. Clôture du dossier par la référente, historique dans la fiche équipement.
+8. Planning des contrôles (équipements à contrôler, enregistrement date/résultat).
+9. Tableau de bord général (terrains, incidents ouverts, contrôles en retard, réparations en cours).
+10. Persistance réelle (base de données + API) à la place de l'état en mémoire — inclura le stockage réel des photos (S3, route API dédiée).

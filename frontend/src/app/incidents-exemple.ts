@@ -28,6 +28,7 @@ export type Incident = {
   description: string;
   gravite: Gravite;
   statut: StatutIncident;
+  photoDataUrl?: string;
 };
 
 export const incidentsExemple: Incident[] = [
@@ -92,6 +93,7 @@ export type ChampsDeclaration = {
   equipement: string;
   description: string;
   gravite: Gravite;
+  photoDataUrl?: string;
 };
 
 export type ErreursDeclaration = {
@@ -118,6 +120,7 @@ export function declarerIncident(incidents: Incident[], champs: ChampsDeclaratio
     description: champs.description.trim(),
     gravite: champs.gravite,
     statut: "declare",
+    photoDataUrl: champs.photoDataUrl,
   };
   return [nouvelIncident, ...incidents];
 }
